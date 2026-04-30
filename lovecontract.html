@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Official Treaty of Us</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Quicksand:wght@300;400;600&family=Playfair+Display:ital,wght@1,400;1,700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        :root {
+            --bg-cream: #fffaf0;
+            --dusty-rose: #e5989b; 
+            --soft-gold: #d4af37;
+            --deep-rose: #6d5959;
+            --heart-color: rgba(229, 152, 155, 0.4); /* Slightly deeper heart color */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--deep-rose);
+            font-family: 'Quicksand', sans-serif;
+            overflow-x: hidden;
+            /* No scrolling until the gate is opened, keep height locked */
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- ROMANTIC BACKGROUND (Keep Floating Hearts) --- */
+        .heart-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes drift {
+            0% { transform: translateY(110vh) translateX(0) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) translateX(100px) rotate(360deg); opacity: 0; }
+        }
+
+        /* --- ENTRANCE GATE (Keep Envelope but with new text and GIFs/Stickers) --- */
+        #entrance-gate {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, #fff5f5 0%, #fdfaf5 100%);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 5000; transition: all 1.5s cubic-bezier(0.65, 0, 0.35, 1);
+            text-align: center;
+        }
+
+        .gate-header {
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 5px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--deep-rose);
+            margin-bottom: 20px;
+        }
+
+        .gate-title {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4rem;
+            color: var(--dusty-rose);
+            margin-bottom: 30px;
+        }
+
+        .envelope-button {
+            width: 250px; height: 180px;
+            background: #fff; border: 2px solid var(--dusty-rose);
+            position: relative; cursor: pointer; transition: transform 0.5s;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            display: flex; align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        .envelope-button:hover { transform: scale(1.05); }
+
+        .envelope-gif {
+            width: 100%; height: 100%;
+            object-fit: contain; /* Keeps GIF contained within the envelope */
+            position: absolute; top: 0; left: 0;
+            z-index: 1;
+        }
+
+        .envelope-button h3 {
+            position: relative; z-index: 2; /* Content above GIF */
+            font-family: 'Quicksand'; font-size: 1.2rem; letter-spacing: 2px;
+            text-transform: uppercase; color: #fff; text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+            margin-top: auto; /* Push text to the bottom */
+        }
+
+        .sticker-container {
+            position: absolute; pointer-events: none;
+            z-index: 2; /* Stickers above GIF */
+        }
+        .sticker {
+            width: 60px; height: 60px; /* Adjust size */
+            object-fit: contain;
+        }
+        
+        .sticker-tl { top: -20px; left: -20px; }
+        .sticker-br { bottom: -20px; right: -20px; }
+
+        /* --- MAIN LAYOUT (Keep all sections, change text but use GIFs/Stickers) --- */
+        #main-wrapper { opacity: 0; transition: opacity 2s; display: flex; flex-direction: column; }
+
+        .section {
+            min-height: 100vh; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; padding: 40px 20px;
+            position: relative; z-index: 1;
+            scroll-snap-align: start; /* Optional: adds snapping for better flow */
+        }
+
+        h1, h2, .dancing-text { font-family: 'Dancing Script', cursive; }
+
+        /* --- HERO --- */
+        .hero { justify-content: center; text-align: center; }
+        .hero-header { font-family: 'Playfair Display', serif; font-size: 0.9rem; letter-spacing: 3px; color: #aaa; text-transform: uppercase; margin-bottom: 20px; }
+        .hero h1 { font-size: 5rem; color: var(--dusty-rose); margin-bottom: 15px; }
+        .hero p { font-size: 1.1rem; color: #777; margin-bottom: 40px; }
+        .hero-sticker { width: 280px; height: 280px; margin-top: 30px; object-fit: contain; }
+
+        /* --- THE TREATY CONTENT (Keep Cards, use GIFs/Stickers) --- */
+        .treaty-content { justify-content: flex-start; padding-top: 100px; }
+        
+        .card-container {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px; width: 100%; max-width: 1000px; margin-bottom: 60px;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(5px);
+            padding: 40px; border-radius: 30px;
+            box-shadow: 0 15px 50px rgba(229, 152, 155, 0.15);
+            border: 1px solid rgba(255,255,255,0.5);
+            text-align: center; position: relative;
+        }
+        
+        .preamble-card { max-width: 700px; margin-bottom: 60px; }
+
+        .clause-title { font-family: 'Dancing Script'; font-size: 2.2rem; color: var(--dusty-rose); margin-bottom: 15px; }
+        .clause-text { line-height: 1.8; color: #555; }
+        
+        .clause-icon { width: 180px; height: 180px; margin-bottom: 20px; object-fit: contain; }
+
+        /* --- THE SIGNING AREA (Use names and confetti) --- */
+        .signing-zone { background: #fff; padding: 60px; border-radius: 100px 100px 20px 20px; }
+        .sign-title { font-size: 3rem; color: var(--deep-rose); margin-bottom: 15px; }
+        
+        .name-wrapper { display: flex; gap: 30px; width: 100%; max-width: 600px; margin: 40px 0; }
+        .input-group { text-align: left; width: 100%; }
+        label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: #aaa; margin-bottom: 5px; }
+        input {
+            border: none; border-bottom: 2px solid #eee; padding: 15px 10px;
+            font-family: 'Dancing Script'; font-size: 1.8rem; width: 100%;
+            text-align: center; outline: none; transition: 0.3s;
+        }
+        input:focus { border-bottom-color: var(--dusty-rose); }
+
+        .btn-sign {
+            background: var(--dusty-rose); color: white; border: none;
+            padding: 20px 60px; border-radius: 50px; font-weight: 600;
+            cursor: pointer; box-shadow: 0 10px 20px rgba(229, 152, 155, 0.4);
+            transition: 0.3s; letter-spacing: 2px; text-transform: uppercase;
+        }
+        .btn-sign:hover { transform: scale(1.05); background: var(--deep-rose); }
+
+        /* --- CERTIFICATE POPUP (Keep everything, use new text and stickers) --- */
+        #cert-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(109, 89, 89, 0.95); display: none;
+            align-items: center; justify-content: center; z-index: 6000;
+            padding: 20px;
+        }
+
+        .certificate {
+            background: #fff; padding: 60px; width: 100%; max-width: 650px;
+            border: 20px double var(--soft-gold); text-align: center;
+            position: relative; animation: popUp 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popUp { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+        .cert-header { font-family: 'Playfair Display', serif; letter-spacing: 5px; color: #bbb; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 10px; }
+        .cert-title { font-family: 'Playfair Display'; font-style: italic; font-size: 2.8rem; margin: 10px 0; color: #333; }
+        .cert-body { font-size: 1.2rem; line-height: 1.8; color: #555; }
+        .cert-name { font-family: 'Dancing Script'; font-size: 3.8rem; color: var(--dusty-rose); margin: 20px 0; display: inline-block; padding: 0 30px; border-bottom: 2px dashed #eee; }
+        
+        .cert-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 40px; }
+        .wax-seal {
+            width: 110px; height: 110px; background: #900; border-radius: 50%;
+            color: #fff; font-family: 'Dancing Script'; display: flex; align-items: center;
+            justify-content: center; font-size: 0.9rem; transform: rotate(-8deg);
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.4), 0 5px 10px rgba(0,0,0,0.2);
+        }
+        
+        .timestamp { font-size: 0.7rem; color: #aaa; text-transform: uppercase; letter-spacing: 1px; text-align: left; }
+
+        /* --- RESPONSIVE ADJUSTMENTS --- */
+        @media (max-width: 600px) {
+            .name-wrapper { flex-direction: column; gap: 20px; }
+            .hero h1 { font-size: 3.5rem; }
+            .card-container { grid-template-columns: 1fr; }
+            .certificate { padding: 40px 30px; border-width: 10px; }
+            .cert-name { font-size: 2.8rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="heart-bg" id="heart-container"></div>
+
+    <div id="entrance-gate">
+        <div class="gate-content">
+            <h4 class="gate-header">Strictly Private • For Your Eyes Only</h4>
+            <h1 class="gate-title">To My Chosen Heart</h1>
+            
+            <div class="envelope-button" onclick="openTreaty()">
+                <img src="heart.png" alt="Happy couple GIF" class="envelope-gif">
+                <h3>Open Our Treaty</h3>
+                
+                <div class="sticker-container sticker-tl">
+                </div>
+                <div class="sticker-container sticker-br">
+                    <img src="https://img.icons8.com/color/96/key--v1.png" alt="Key Sticker" class="sticker">
+                </div>
+            </div>
+            
+            <p style="margin-top: 50px; color: #c4c5c5; font-size: 1rem;">Click the seal to begin</p>
+        </div>
+    </div>
+
+    <div id="main-wrapper">
+        <section class="section hero">
+            <h4 class="hero-header">PRIVATE DOCUMENT • EST. TODAY</h4>
+            <h1>LOVE CONTRACT </h1>
+            <h1>The Treaty of Us</h1>
+            <p>"A sacred agreement for two imperfect hearts."</p>
+            
+            <img src="bd3.webp" alt="Marriage & Safety Sticker" class="hero-sticker">
+            
+            <p style="margin-top: 60px; font-size: 0.9rem; color: #ccc;">Scroll to Review Terms ↓</p>
+        </section>
+
+        <section class="section treaty-content">
+            <div class="content-card preamble-card">
+                <h2 class="dancing-text" style="font-size: 2.8rem; color: var(--dusty-rose); margin-bottom: 20px;">The Preamble</h2>
+                <p style="font-style: italic; font-size: 1.2rem; color: #777; line-height: 1.8;">
+                    "This Treaty is not bound by formal rules, but by formal promises. We acknowledge that life is sweeter, the sun is brighter, and our hearts are fuller when we are moving together."
+                </p>
+            </div>
+
+            <div class="card-container">
+                <div class="content-card">
+                    <img src="nvw1.webp" alt="Helmet Icon" class="clause-icon">
+                    <h3 class="clause-title">The "O NEVER WRONG RULE"</h3>
+                    <p class="clause-text">I officially admit that you are the boss. Even when I think I have a point, you're still right. If I'm wrong, I'm wrong. If I'm technically right, I'm still probably wrong because I didn't see it your way. My goal is to make you happy, not to win an argument.</p>
+                </div>
+                
+                <div class="content-card" style="border-left-color: var(--soft-gold);">
+                    <img src="bmm.webp" alt="Game Controller Icon" class="clause-icon">
+                    <h3 class="clause-title">BAD MEMORY BF POLICY</h3>
+                    <p class="clause-text">I know I can be a bit forgetful with the little details. I’m sorry for that. I promise to really listen when you talk and to pay closer attention to the things that matter to you. If I forget something, please tell me—I want to be better at catching the little things before they become a thing.</p>
+                </div>
+                
+                <div class="content-card" style="border-left-color: var(--deep-rose);">
+                    <img src="gaming.webp" alt="Sharing Food Icon" class="clause-icon">
+                    <h3 class="clause-title">MY PRIORITIES</h3>
+                    <p class="clause-text">I love my games, my studies, and my downtime, but I promise that none of that comes before you. If you need me, or if you just want to talk or spend time together, I’ll put the controller down, close the books, and give you my full attention. You are my #1</p>
+                </div>
+            </div>
+                         <div class="content-card" style="border-left-color: var(--deep-rose);">
+                    <img src="queen.webp" alt="Sharing Food Icon" class="clause-icon">
+                    <h3 class="clause-title">PRINCESS TREATMENT POLICY</h3>
+                    <p class="clause-text">This is the most important one. Sometimes I get distracted and forget the little things that keep you safe, like making sure you have your helmet. I promise to start acting like your personal safety guard. I’ll make sure you’re taken care of, safe, and looked after every single time we go out. That’s my job.</p>
+                </div>
+            </div>
+                         <div class="content-card" style="border-left-color: var(--deep-rose);">
+                    <img src="angry.webp" alt="Sharing Food Icon" class="clause-icon">
+                    <h3 class="clause-title">ARGUMENT POLICY</h3>
+                    <p class="clause-text">We’re human. We’re going to mess up sometimes. But my promise is that at the end of every day, we start fresh. No grudges, just us, working on our life together.</p>
+                  
+
+                </div>
+            </div>
+              <h5>Please Read The Term Privacy And Policy Of Contract First Before Signed.
+                    </h5>
+                    <h5>The Contract Will Be Powered By Our Love Contitution.</h5>
+        </section>
+
+        <section class="section signing-zone">
+            <h2 class="sign-title">Execute the Agreement</h2>
+            <p>Type your names to formally establish our treaty.</p>
+            
+        <div class="name-wrapper">
+        <div class="input-group">
+        <label>First Person (BF)</label>
+        <H4>(The one who is always learning, but loves her more every day)</H4>
+        <input type="text" id="bfName" placeholder="Type Full Name">
+        <label style="margin-top: 15px;">Birth of Date</label>
+        <input type="date" id="bfDOB">
+        <label style="margin-top: 15px;">Sex :</label>
+        <input type="text" id="gfsex">
+                </div>
+                <div class="input-group">
+                    <label>Second Person (GF)</label>
+                    <H4>(The one who is never wrong, and loves him anyway)</H4>
+                    <input type="text" id="gfName" placeholder="Type Full Name">
+                    <label style="margin-top: 15px;">Birth of Date</label>
+        <input type="date" id="gfDOB">
+                   <label style="margin-top: 15px;">Sex :</label>
+        <input type="text" id="gfsex">
+                </div>
+            </div>
+<H1>AGREED BY, BOTH SIDE.</H1>
+            <button class="btn-sign" onclick="ratify()">Seal Our Promises</button>
+            <p style="margin-top: 25px; font-size: 1rem; color: #ccc;">By signing, you officially agree to obey the term and privacy policy of this contract.</p>
+        </section>
+    </div>
+
+<div id="cert-overlay">
+    <div class="certificate">
+        <h4 class="cert-header">CERTIFICATE OF ETERNAL PROMISE</h4>
+        <h1 class="cert-title">The Treaty of Us</h1>
+        
+        <p class="cert-body">This binding certificate formally declares that the hearts of</p>
+        
+        <div class="cert-name">
+            <span id="res-bf"></span><BR> & <BR><span id="res-gf"></span>
+        </div>
+<div class="cert-stats-container" style="display: flex; justify-content: space-around; margin: 10px 0; border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 5px 0;">
+    <div>BF'S BD :<span id="res-bfDOB"></span> | <span id="res-bfSex"></span></div>
+    <div>GF'S BD :<span id="res-gfDOB"></span> | <span id="res-gfSex"></span></div>
+</div>
+
+        <p class="cert-body">Are now officially entwined and subject to the clauses, promises, and laughter outlined in this Treaty.</p>
+        
+        <div class="cert-footer">
+            <div style="text-align: left;">
+                <p class="timestamp" id="timestamp-display"></p>
+                <p style="font-size: 0.7rem; color: #ddd; text-transform: uppercase;">Verified For Lifetime</p>
+            </div>
+            <div class="wax-seal">Signed<br>Forever</div>
+        </div>
+    </div>
+</div>
+            
+            <div class="sticker-container sticker-tl" style="z-index: 1;">
+                <img src="https://img.icons8.com/color/96/romantic-heart.png" alt="Heart Sticker" class="sticker">
+            </div>
+            
+            
+            <p style="margin-top: 40px; font-size: 0.8rem; color: #bbb; cursor: pointer;" onclick="location.reload()">Back to Start</p>
+        </div>
+    </div>
+
+    <script>
+        // 1. GENERATE FLOATING HEARTS (Keep as is)
+        function createHearts() {
+            const container = document.getElementById('heart-container');
+            const heartIcons = ['♥', '💖', '🌸', '💕'];
+            
+            for (let i = 0; i < 25; i++) { // More hearts for romance
+                const heart = document.createElement('div');
+                heart.innerHTML = heartIcons[Math.floor(Math.random() * heartIcons.length)];
+                heart.style.position = 'absolute';
+                heart.style.left = Math.random() * 100 + 'vw';
+                heart.style.top = '110vh';
+                heart.style.fontSize = (Math.random() * 20 + 10) + 'px';
+                heart.style.color = 'var(--heart-color)';
+                heart.style.opacity = Math.random();
+                heart.style.animation = `drift ${Math.random() * 5 + 7}s linear infinite`; // Slower drift
+                heart.style.animationDelay = Math.random() * 7 + 's';
+                container.appendChild(heart);
+            }
+        }
+        createHearts();
+
+        // 2. OPEN THE TREATY (Keep flow)
+        function openTreaty() {
+            document.getElementById('entrance-gate').style.transform = 'translateY(-100%)';
+            document.getElementById('main-wrapper').style.opacity = '1';
+            document.body.style.overflow = 'auto'; // Enable scrolling
+        }
+
+        // 3. RATIFY (Seal promises, handle names and confetti)
+        function ratify() {
+            const bf = document.getElementById('bfName').value;
+            const gf = document.getElementById('gfName').value;
+            const bfDOB = document.getElementById('bfDOB').value;
+            const gfDOB = document.getElementById('gfDOB').value;
+
+            if(!bf || !gf) {
+                alert("The hearts require both names! ❤️");
+                return;
+            }
+
+            // Populate certificate names and timestamp
+            document.getElementById('res-bf').innerText = bf;
+            document.getElementById('res-gf').innerText = gf;
+            document.getElementById('res-bfDOB').innerText = bfDOB;
+            document.getElementById('res-gfDOB').innerText = gfDOB;
+            document.getElementById('timestamp-display').innerText = "Executed on " + new Date().toLocaleDateString() + " | V1.0";
+
+            // Show Certificate Pop-up
+            document.getElementById('cert-overlay').style.display = 'flex';
+
+            // Special Confetti Blast (More massive)
+            confetti({
+                particleCount: 300,
+                spread: 140,
+                origin: { y: 0.6 },
+                colors: ['#e5989b', '#ffffff', '#d4af37', '#6d5959']
+            });
+        }
+    </script>
+</body>
+</html>
